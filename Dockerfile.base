@@ -1,0 +1,45 @@
+#
+# Base image for BASIC+ulfius
+#
+
+# 0. base image, install freebasic
+ARG ARCH_VERSION=base
+FROM archlinux:${ARCH_VERSION} AS base
+
+# install common stuff
+RUN pacman -Sy --noconfirm freebasic orcania yder libmicrohttpd jansson gcc make wget
+
+# 1. build orcania/yder/ulfius
+#	ulfius should be built without TLS
+FROM base AS ulfius-builder
+
+# no build deps
+
+# download and install ulfius
+COPY ulfius-install.sh .
+ARG ULFIUS_BRANCH=freebasic
+RUN pacman -Sy --noconfirm pkgconfig && \
+	./ulfius-install.sh ${ULFIUS_BRANCH}
+
+# 2. build fbfrog & port ulfius/yder headers
+#	this is development build
+FROM ulfius-builder AS fbfrog
+
+COPY fbfrog-install.sh fbfrog-runner.sh *.fbfrog ./
+
+RUN ./fbfrog-install.sh && \
+	mkdir -p /opt/ulfius/include/freebasic && \
+	./fbfrog-runner.sh ./fbfrog-master/fbfrog /opt/ulfius/include/freebasic
+
+#RUN pacman -Sy --noconfirm tree && tree /opt/ulfius
+
+# 3. (from base) copy files and build basic
+FROM base as dev-image
+
+# install ulfius headers and .bi files
+COPY --from=fbfrog /opt/ulfius/ /usr/
+
+# create regular USER
+RUN useradd -ms /bin/bash user
+USER user
+WORKDIR /home/user

@@ -1,0 +1,20 @@
+-target linux-x86_64
+-include /usr/include/jansson_config.h
+
+/usr/include/jansson.h
+
+-define JSON_HAVE_ATOMIC_BUILTINS 0
+-define JSON_HAVE_SYNC_BUILTINS 0
+
+-rename_ JSON_OBJECT
+-rename_ JSON_ARRAY
+-rename_ JSON_STRING
+-rename_ JSON_INTEGER
+-rename_ JSON_REAL
+-rename_ JSON_TRUE
+-rename_ JSON_FALSE
+-rename_ JSON_NULL
+
+-rename_ object
+
+-renametag json_error_code json_error_code_enum
